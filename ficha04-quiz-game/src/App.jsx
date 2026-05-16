@@ -6,6 +6,20 @@ import { localQuestions } from "./data/localQuestions";
  * Produz/Devolve: diferentes ecrãs da aplicação conforme o estado atual do jogo, incluindo prepar jogo, jogo em curso e fim do jogo.
  * @returns {JSX.Element} renderiza a interface correspondente aos estados "idle", "playing" ou "finished".
  */
+
+/**
+ * Propósito: criar uma nova ordem aleatória das respostas sem alterar o array original recebido pela função.
+ * Produz/Devolve: uma nova lista de respostas baralhadas para apresentação no ecrã.
+ * @param {string[]} items - lista de respostas da pergunta atual que será baralhada.
+ * @returns {string[]} devolve um novo array com as respostas numa ordem aleatória.
+ */
+function shuffleItems(items) {
+    // [...items] cria uma cópia. Assim, não alteramos o array original.
+    // Isto é importante porque arrays recebidos de state ou props não devem ser mutados diretamente.
+    // sort com Math.random não é perfeito para produção, mas é suficiente para este exercício didático.
+    return [...items].sort(() => Math.random() - 0.5);
+}
+
 function App() {
     // Índice da pergunta atual dentro do array de perguntas.
     // Começa em 0 porque arrays em JavaScript começam no índice 0.
@@ -106,12 +120,22 @@ function App() {
         setCurrentQuestionIndex((previousIndex) => previousIndex + 1);
     };
 
-    // Nesta fase, as respostas ainda aparecem sempre na mesma ordem:
-    // primeiro a correta, depois as erradas. Mais tarde vamos baralhar.
-    // Fazemos assim de propósito para aprender a mecânica antes de resolver o problema da ordem previsível.
-    const currentAnswers = currentQuestion
-        ? [currentQuestion.correctAnswer, ...currentQuestion.incorrectAnswers]
-        : [];
+    const currentAnswers = useMemo(() => {
+        // Durante alguns renders, pode ainda não existir pergunta atual.
+        // Nesse caso, devolvemos array vazio para evitar erros no .map().
+        // Esta guarda é especialmente útil quando a app passa por loading, erro ou troca de perguntas.
+        if (!currentQuestion) return [];
+
+        // Juntamos resposta certa + erradas num único array.
+        // A UI só precisa de uma lista de botões, não de saber qual resposta era certa nesta etapa.
+        return shuffleItems([
+            currentQuestion.correctAnswer,
+            ...currentQuestion.incorrectAnswers,
+        ]);
+        // Só queremos baralhar quando muda a pergunta atual.
+        // Se o tempo mudar, currentQuestion não muda, por isso a ordem mantém-se.
+        // Isto evita uma experiência injusta em que as respostas saltam de posição a cada segundo.
+    }, [currentQuestion]);
 
     const gameStats = useMemo(() => {
         // Conta apenas os valores true.
@@ -254,12 +278,15 @@ function App() {
                 {
                     gameStatus === "finished" && (
                         <section className="quiz-card">
-                            <h2>Fim do jogo</h2>
+                            <h2>
+                                {gameStats.victory ? "Objetivo atingido!" : "Tenta novamente!"}
+                            </h2>
                             <p>Jogador: {cleanPlayerName}</p>
+                            <p>Pontuação: {gameStats.score}</p>
                             <p>
-                                Respostas certas: {answerResults.filter(Boolean).length} de{" "}
-                                {totalQuestions}
+                                Certas: {gameStats.correctAnswers} de {gameStats.totalQuestions}
                             </p>
+                            <p>Percentagem: {gameStats.percentage}%</p>
 
                             <button
                                 type="button"
