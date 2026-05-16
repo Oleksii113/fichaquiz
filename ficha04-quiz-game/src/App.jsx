@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { localQuestions } from "./data/localQuestions";
 
 /**
  * Propósito: controlar o fluxo principal do jogo através do estado da aplicação e validar os dados introduzidos pelo jogador antes de iniciar o jogo.
@@ -6,6 +7,11 @@ import { useState } from "react";
  * @returns {JSX.Element} renderiza a interface correspondente aos estados "idle", "playing" ou "finished".
  */
 function App() {
+    // Índice da pergunta atual dentro do array de perguntas.
+    // Começa em 0 porque arrays em JavaScript começam no índice 0.
+    // Guardar só o índice é mais simples do que duplicar a pergunta inteira em state.
+    const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+
     // Nome escrito pelo jogador.
     // É atualizado a cada tecla e usado depois para validação e resultado final.
     const [playerName, setPlayerName] = useState("");
@@ -18,6 +24,11 @@ function App() {
     // Guardar isto num único state evita vários booleans soltos como isPlaying, isFinished, isLoading.
     const [gameStatus, setGameStatus] = useState("idle");
 
+    // Guarda um boolean por cada resposta:
+    // true = certa, false = errada.
+    // Este formato é simples de contar com filter(Boolean) e evita guardar texto desnecessário.
+    const [answerResults, setAnswerResults] = useState([]);
+
     // trim remove espaços no início/fim para evitar nomes que parecem preenchidos mas não têm caracteres úteis.
     const cleanPlayerName = playerName.trim();
 
@@ -26,20 +37,81 @@ function App() {
     const canStartGame = cleanPlayerName.length >= 2;
 
     const startGame = () => {
-        // Se o nome ainda não for válido, a função termina imediatamente.
-        // Esta proteção fica no handler mesmo que o botão já esteja disabled, porque a lógica não deve depender só da UI.
+        // Mantemos a validação da fase anterior.
+        // A validação continua a proteger a lógica mesmo que a UI seja alterada no futuro.
         if (!canStartGame) return;
 
-        // Mudar o estado do jogo faz a UI trocar do ecrã inicial para o jogo.
-        // Não manipulamos o DOM diretamente; pedimos ao React para renderizar outro bloco.
+        // Cada novo jogo deve começar na primeira pergunta.
+        // Sem isto, um segundo jogo poderia arrancar a meio da lista.
+        setCurrentQuestionIndex(0);
+
+        // Cada novo jogo deve limpar respostas antigas.
+        // Caso contrário, os resultados do jogo anterior contaminariam a pontuação.
+        setAnswerResults([]);
+
+        // Só depois de reiniciar o progresso mudamos para o ecrã de jogo.
+        // A ordem ajuda a garantir que o ecrã playing já recebe estado limpo.
         setGameStatus("playing");
     };
-
     const resetGame = () => {
         // Volta ao ecrã inicial.
         // Nesta fase ainda não limpamos tudo, porque o objetivo é apenas testar transições.
         setGameStatus("idle");
     };
+
+    // Por agora, a fonte de perguntas é apenas o array local.
+    // Mais tarde, esta variável será substituída por state vindo da API.
+    // Esta etapa separa a mecânica do jogo da dificuldade adicional dos pedidos HTTP.
+    const questions = localQuestions;
+
+    // A pergunta atual é encontrada pelo índice guardado no state.
+    // Se currentQuestionIndex mudar, o React recalcula esta variável no render seguinte.
+    const currentQuestion = questions[currentQuestionIndex];
+
+    // Guardamos o total numa variável para não repetir questions.length no JSX.
+    // Também torna mais fácil trocar perguntas locais por perguntas externas sem mexer em vários sítios.
+    const totalQuestions = questions.length;
+
+    /**
+     * Propósito: avaliar a resposta selecionada pelo jogador, guardar o resultado e avançar para a próxima pergunta ou terminar o jogo.
+     * Produz/Devolve: não devolve valor diretamente mas atualiza o estado das respostas, da pergunta atual e do estado do jogo.
+     * @param {string} selectedAnswer - resposta escolhida pelo jogador através dos botões de resposta da pergunta atual.
+     */
+    const handleAnswer = (selectedAnswer) => {
+        // Compara a resposta escolhida com a resposta certa da pergunta atual.
+        // A comparação é direta porque cada botão envia exatamente o texto da resposta.
+        const isCorrect = selectedAnswer === currentQuestion.correctAnswer;
+
+        // Criamos um novo array para respeitar a regra de imutabilidade do React.
+        // Nunca fazemos answerResults.push(...), porque isso altera o array antigo e pode impedir o React de detetar a mudança.
+        const updatedResults = [...answerResults, isCorrect];
+
+        // Atualiza o histórico de respostas.
+        // Depois deste setState, a próxima renderização já terá o novo resultado incluído.
+        setAnswerResults(updatedResults);
+
+        // Estamos na última pergunta se o índice atual for o último índice do array.
+        // Como os índices começam em 0, o último índice é questions.length - 1.
+        const isLastQuestion = currentQuestionIndex === questions.length - 1;
+
+        if (isLastQuestion) {
+            // Se era a última pergunta, o jogo termina.
+            // Mudamos de ecrã em vez de tentar avançar para uma pergunta que não existe.
+            setGameStatus("finished");
+            return;
+        }
+
+        // Caso contrário, avança uma posição no array.
+        // Usamos atualização funcional para trabalhar sempre com o índice mais recente.
+        setCurrentQuestionIndex((previousIndex) => previousIndex + 1);
+    };
+
+    // Nesta fase, as respostas ainda aparecem sempre na mesma ordem:
+    // primeiro a correta, depois as erradas. Mais tarde vamos baralhar.
+    // Fazemos assim de propósito para aprender a mecânica antes de resolver o problema da ordem previsível.
+    const currentAnswers = currentQuestion
+        ? [currentQuestion.correctAnswer, ...currentQuestion.incorrectAnswers]
+        : [];
 
     return (
         // <main> identifica o conteúdo principal da página.
@@ -117,37 +189,54 @@ function App() {
                     </section>
                 )}
 
-                {gameStatus === "playing" && (
-                    // Bloco temporário para confirmar a transição de estado.
-                    // Antes de criar perguntas reais, validamos que o fluxo idle -> playing funciona.
-                    <section className="quiz-card">
-                        <h2>Jogo em curso</h2>
-                        <p>Jogador: {cleanPlayerName}</p>
-                        <p>Dificuldade: {difficulty}</p>
-                        <button
-                            type="button"
-                            className="button-secondary"
-                            onClick={() => setGameStatus("finished")}
-                        >
-                            Terminar teste rápido
-                        </button>
-                    </section>
-                )}
+                {
+                    gameStatus === "playing" && currentQuestion && (
+                        <section className="quiz-card">
+                            <p>
+                                Pergunta {currentQuestionIndex + 1} de {totalQuestions}
+                            </p>
+                            <h2>{currentQuestion.question}</h2>
 
-                {gameStatus === "finished" && (
-                    // Bloco final temporário.
-                    // Mais tarde será substituído por um resultado calculado a partir das respostas do jogador.
-                    <section className="quiz-card">
-                        <h2>Fim do jogo</h2>
-                        <button
-                            type="button"
-                            className="button-primary"
-                            onClick={resetGame}
-                        >
-                            Voltar ao início
-                        </button>
-                    </section>
-                )}
+                            <div className="answer-grid">
+                                {currentAnswers.map((answer) => (
+                                    /*
+                                Cada resposta gera um botão.
+                                A key ajuda o React a identificar cada item.
+                                */
+                                    <button
+                                        key={answer}
+                                        type="button"
+                                        className="answer-button"
+                                        onClick={() => handleAnswer(answer)}
+                                    >
+                                        {answer}
+                                    </button>
+                                ))}
+                            </div>
+                        </section>
+                    )
+                }
+
+                {
+                    gameStatus === "finished" && (
+                        <section className="quiz-card">
+                            <h2>Fim do jogo</h2>
+                            <p>Jogador: {cleanPlayerName}</p>
+                            <p>
+                                Respostas certas: {answerResults.filter(Boolean).length} de{" "}
+                                {totalQuestions}
+                            </p>
+
+                            <button
+                                type="button"
+                                className="button-primary"
+                                onClick={resetGame}
+                            >
+                                Voltar ao início
+                            </button>
+                        </section>
+                    )
+                }
             </div>
         </main>
     );
