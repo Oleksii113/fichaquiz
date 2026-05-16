@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { localQuestions } from "./data/localQuestions";
 
 /**
@@ -13,6 +13,12 @@ import { localQuestions } from "./data/localQuestions";
  * @param {string[]} items - lista de respostas da pergunta atual que será baralhada.
  * @returns {string[]} devolve um novo array com as respostas numa ordem aleatória.
  */
+
+// Tempo inicial de cada pergunta.
+// Usar uma constante evita repetir o número 15 em vários sítios.
+// Se a regra mudar para 20 segundos, alteramos apenas esta linha.
+const QUESTION_TIME_LIMIT = 15;
+
 function shuffleItems(items) {
     // [...items] cria uma cópia. Assim, não alteramos o array original.
     // Isto é importante porque arrays recebidos de state ou props não devem ser mutados diretamente.
@@ -43,6 +49,10 @@ function App() {
     // Este formato é simples de contar com filter(Boolean) e evita guardar texto desnecessário.
     const [answerResults, setAnswerResults] = useState([]);
 
+    // Tempo restante da pergunta atual.
+    // Este valor muda com o temporizador e também é reposto quando passamos para outra pergunta.
+    const [timeLeft, setTimeLeft] = useState(QUESTION_TIME_LIMIT);
+
     // trim remove espaços no início/fim para evitar nomes que parecem preenchidos mas não têm caracteres úteis.
     const cleanPlayerName = playerName.trim();
 
@@ -51,22 +61,17 @@ function App() {
     const canStartGame = cleanPlayerName.length >= 2;
 
     const startGame = () => {
-        // Mantemos a validação da fase anterior.
-        // A validação continua a proteger a lógica mesmo que a UI seja alterada no futuro.
         if (!canStartGame) return;
 
-        // Cada novo jogo deve começar na primeira pergunta.
-        // Sem isto, um segundo jogo poderia arrancar a meio da lista.
         setCurrentQuestionIndex(0);
-
-        // Cada novo jogo deve limpar respostas antigas.
-        // Caso contrário, os resultados do jogo anterior contaminariam a pontuação.
         setAnswerResults([]);
 
-        // Só depois de reiniciar o progresso mudamos para o ecrã de jogo.
-        // A ordem ajuda a garantir que o ecrã playing já recebe estado limpo.
+        // Cada jogo começa com o tempo completo.
+        // Isto evita herdar o tempo que sobrou da tentativa anterior.
+        setTimeLeft(QUESTION_TIME_LIMIT);
         setGameStatus("playing");
     };
+
     const resetGame = () => {
         // Volta ao ecrã inicial.
         // Nesta fase ainda não limpamos tudo, porque o objetivo é apenas testar transições.
@@ -117,7 +122,10 @@ function App() {
 
         // Caso contrário, avança uma posição no array.
         // Usamos atualização funcional para trabalhar sempre com o índice mais recente.
+        // Quando avança para a próxima pergunta, o temporizador reinicia.
+        // Esta linha fica junto do avanço para manter índice e tempo sincronizados.
         setCurrentQuestionIndex((previousIndex) => previousIndex + 1);
+        setTimeLeft(QUESTION_TIME_LIMIT);
     };
 
     const currentAnswers = useMemo(() => {
@@ -170,6 +178,34 @@ function App() {
         // O cálculo só precisa de ser refeito quando mudam as respostas ou o total.
         // Se outro state mudar, como o tema, estas estatísticas não precisam de ser recalculadas.
     }, [answerResults, totalQuestions]);
+
+    useEffect(() => {
+        // O temporizador só deve correr durante o jogo.
+        // Se estivermos no menu, loading, erro ou resultado, não faz nada.
+        // Esta guarda impede contagens invisíveis quando o utilizador não está a responder.
+        if (gameStatus !== "playing") return;
+
+        // Se o tempo chegou a 0, paramos de agendar novos segundos.
+        // Sem esta condição, o contador poderia continuar para valores negativos.
+        if (timeLeft === 0) return;
+
+        // setTimeout espera 1 segundo e depois atualiza o state.
+        // Como timeLeft está nas dependências, cada atualização agenda o próximo segundo.
+        const timeoutId = setTimeout(() => {
+            // Forma funcional: recebe o valor mais recente do state.
+            // Isto evita bugs quando várias atualizações ficam próximas no tempo.
+            setTimeLeft((currentTime) => currentTime - 1);
+        }, 1000);
+
+        // Cleanup: se o componente renderizar outra vez antes do timeout terminar,
+        // cancelamos o timeout anterior para evitar contagens duplicadas.
+        // Este padrão é essencial em efeitos com timers.
+        return () => {
+            clearTimeout(timeoutId);
+        };
+        // Dependências: o efeito depende do estado do jogo e do tempo atual.
+        // Se um destes valores mudar, o React reavalia se deve continuar a contar.
+    }, [gameStatus, timeLeft]);
 
     return (
         // <main> identifica o conteúdo principal da página.
@@ -250,6 +286,7 @@ function App() {
                 {
                     gameStatus === "playing" && currentQuestion && (
                         <section className="quiz-card">
+                            <p>Tempo restante: {timeLeft}s</p>
                             <p>
                                 Pergunta {currentQuestionIndex + 1} de {totalQuestions}
                             </p>
