@@ -1,0 +1,35 @@
+/* Garante que padding e border entram no cálculo da largura total.
+   Isto torna os tamanhos mais previsíveis e evita surpresas quando adicionamos espaçamento. */
+* {
+    box-sizing: border-box;
+}
+
+/* Remove margens padrão do browser e define uma base visual simples.
+   Começar com uma base controlada reduz diferenças entre browsers e facilita o debug visual. */
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #f3f4f6;
+    color: #111827;
+}
+
+/* Faz inputs, selects e botões herdarem a fonte da página.
+   Sem isto, alguns browsers usam fontes próprias nos controlos de formulário. */
+button,
+input,
+select {
+    font: inherit;
+}
+
+/* Mostra visualmente que os botões são elementos clicáveis.
+   Este pequeno detalhe melhora a perceção de interatividade da interface. */
+button {
+    cursor: pointer;
+}
+
+/* Dá feedback quando um botão está bloqueado.
+   O cursor e a opacidade ajudam o utilizador a perceber que a ação não está disponível. */
+button:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}

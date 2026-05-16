@@ -1,0 +1,218 @@
+/* Container global da aplicação.
+   min-height garante que o fundo cobre o ecrã todo mesmo quando há pouco conteúdo. */
+.app {
+    min-height: 100vh;
+    padding: 24px;
+    background:
+        radial-gradient(circle at top left, #dbeafe 0, transparent 30%),
+        radial-gradient(circle at bottom right, #dcfce7 0, transparent 28%),
+        #f8fafc;
+    color: #111827;
+}
+
+/* Classe alternativa aplicada quando o tema escuro estiver ativo.
+   O tema é controlado em React, mas a responsabilidade visual fica no CSS. */
+.app--dark {
+    background:
+        radial-gradient(circle at top left, #1d4ed8 0, transparent 28%),
+        radial-gradient(circle at bottom right, #047857 0, transparent 24%),
+        #0f172a;
+    color: #f9fafb;
+}
+
+/* Limita a largura da app para o conteúdo não ficar demasiado espalhado.
+   Sem este limite, linhas longas tornam-se difíceis de ler em monitores grandes. */
+.quiz-shell {
+    max-width: 820px;
+    margin: 0 auto;
+}
+
+/* Título principal da app.
+   Mantemos o destaque no nome do jogo sem depender de estilos inline no JSX. */
+.quiz-shell h1 {
+    margin: 0;
+    font-size: 2.4rem;
+}
+
+/* Texto introdutório logo abaixo do título.
+   Este texto funciona como contexto rápido, por isso deve ser mais discreto que o h1. */
+.quiz-shell > p {
+    margin: 8px 0 0;
+    color: #475569;
+}
+
+.app--dark .quiz-shell > p {
+    color: #cbd5e1;
+}
+
+/* Cartão base usado para cada ecrã principal da ficha.
+   Reutilizar a mesma classe mantém consistência entre início, pergunta, loading, erro e resultado. */
+.quiz-card {
+    margin-top: 24px;
+    padding: 24px;
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.92);
+    color: #111827;
+    box-shadow: 0 18px 45px rgba(15, 23, 42, 0.12);
+    backdrop-filter: blur(10px);
+}
+
+/* Remove a margem superior do primeiro título dentro de um cartão.
+   Isto evita espaçamento duplicado entre o padding do cartão e o h2. */
+.quiz-card h2 {
+    margin-top: 0;
+}
+
+/* Ajusta o cartão quando o tema escuro está ativo.
+   O contraste precisa de ser revisto no tema escuro para manter a leitura confortável. */
+.app--dark .quiz-card {
+    border-color: rgba(148, 163, 184, 0.24);
+    background: rgba(15, 23, 42, 0.9);
+    color: #f9fafb;
+    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.35);
+}
+
+/* Cada linha de formulário fica em coluna: label em cima, campo por baixo.
+   Esta estrutura é mais clara para alunos e funciona bem em ecrãs estreitos. */
+.form-row {
+    display: grid;
+    gap: 6px;
+    margin-top: 14px;
+}
+
+/* Estilo comum para campos de texto e seleção.
+   Agrupar estes estilos evita duplicação entre input e select. */
+.form-row input,
+.form-row select {
+    padding: 11px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    background: #ffffff;
+    color: #111827;
+}
+
+.form-row input:focus,
+.form-row select:focus {
+    outline: 3px solid rgba(37, 99, 235, 0.18);
+    border-color: #2563eb;
+}
+
+.app--dark .form-row input,
+.app--dark .form-row select {
+    border-color: #475569;
+    background: #020617;
+    color: #f8fafc;
+}
+
+/* Grelhas simples para botões principais e respostas.
+   A mesma base permite organizar ações e respostas sem criar layouts diferentes para tudo. */
+.button-row,
+.answer-grid {
+    display: grid;
+    gap: 10px;
+    margin-top: 18px;
+}
+
+/* Botões partilham tamanho e arredondamento para consistência visual.
+   Quando controlos parecidos têm estilos parecidos, a UI fica mais fácil de interpretar. */
+.button-primary,
+.button-secondary,
+.answer-button {
+    padding: 11px 14px;
+    border: 1px solid #2563eb;
+    border-radius: 6px;
+    background: #2563eb;
+    color: white;
+    transition:
+        transform 0.15s ease,
+        border-color 0.15s ease,
+        background-color 0.15s ease,
+        box-shadow 0.15s ease;
+}
+
+.button-primary:hover:not(:disabled),
+.button-secondary:hover:not(:disabled),
+.answer-button:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 24px rgba(37, 99, 235, 0.18);
+}
+
+/* Botão secundário: usado para ações menos principais.
+   A diferença visual ajuda a separar ação principal de ação alternativa. */
+.button-secondary {
+    border-color: #6b7280;
+    background: #6b7280;
+}
+
+/* Respostas parecem botões, mas com aspeto mais neutro.
+   Como há várias respostas no mesmo nível, evitamos que todas pareçam ações primárias. */
+.answer-button {
+    border-color: #cbd5e1;
+    background: #f8fafc;
+    color: #0f172a;
+    text-align: left;
+}
+
+/* Pequeno feedback ao passar o rato por uma resposta ativa.
+   O hover confirma que a resposta pode ser selecionada enquanto não estiver disabled. */
+.answer-button:hover:not(:disabled) {
+    border-color: #2563eb;
+    background: #eff6ff;
+}
+
+.app--dark .answer-button {
+    border-color: #475569;
+    background: #111827;
+    color: #f8fafc;
+}
+
+.app--dark .answer-button:hover:not(:disabled) {
+    border-color: #60a5fa;
+    background: #1e293b;
+}
+
+/* Espaçamento do bloco do temporizador.
+   Separar visualmente o tempo ajuda o aluno a perceber que ele afeta a pergunta atual. */
+.timer {
+    margin: 12px 0;
+}
+
+/* Fundo da barra do temporizador.
+   O fundo representa o espaço total disponível antes de a pergunta bloquear. */
+.timer-bar {
+    height: 12px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: #e2e8f0;
+}
+
+/* Parte preenchida da barra.
+   A largura vem de React porque depende do estado timeLeft; a cor fica no CSS. */
+.timer-bar__fill {
+    height: 100%;
+    background: linear-gradient(90deg, #22c55e, #eab308, #ef4444);
+    transition: width 0.2s ease;
+}
+
+/* Mensagens de erro ou aviso importante.
+   Usamos uma cor consistente para problemas de validação, timeout e falhas de API. */
+.error-text {
+    color: #b91c1c;
+}
+
+/* Texto secundário, usado para ajuda ou contexto.
+   A cor mais suave indica que o texto ajuda, mas não é a ação principal. */
+.muted {
+    color: #6b7280;
+}
+
+.app--dark .muted {
+    color: #cbd5e1;
+}
+
+@media (min-width: 700px) {
+    .answer-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
