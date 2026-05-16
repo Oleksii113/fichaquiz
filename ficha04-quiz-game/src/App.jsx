@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { localQuestions } from "./data/localQuestions";
 
 /**
@@ -112,6 +112,40 @@ function App() {
     const currentAnswers = currentQuestion
         ? [currentQuestion.correctAnswer, ...currentQuestion.incorrectAnswers]
         : [];
+
+    const gameStats = useMemo(() => {
+        // Conta apenas os valores true.
+        // Boolean é prático aqui porque cada resposta fica registada como true/false.
+        // Assim transformamos o histórico de respostas num número de respostas certas sem criar novo state.
+        const correctAnswers = answerResults.filter(Boolean).length;
+
+        // Nesta regra simples, cada resposta certa vale 100 pontos.
+        // A pontuação é derivada, por isso deve ser calculada e não guardada separadamente.
+        const score = correctAnswers * 100;
+
+        // Evita divisão por zero caso ainda não existam perguntas.
+        // Esta proteção torna o cálculo robusto mesmo durante loading ou falhas da API.
+        const percentage =
+            totalQuestions > 0
+                ? Math.round((correctAnswers / totalQuestions) * 100)
+                : 0;
+
+        // Regra do jogo: o jogador atinge o objetivo se acertar pelo menos 60%.
+        // Separar esta regra numa variável facilita mudar o critério mais tarde.
+        const victory = percentage >= 60;
+
+        // Devolvemos um objeto para agrupar todas as estatísticas finais.
+        // O ResultScreen recebe um único objeto em vez de várias props soltas.
+        return {
+            correctAnswers,
+            totalQuestions,
+            score,
+            percentage,
+            victory,
+        };
+        // O cálculo só precisa de ser refeito quando mudam as respostas ou o total.
+        // Se outro state mudar, como o tema, estas estatísticas não precisam de ser recalculadas.
+    }, [answerResults, totalQuestions]);
 
     return (
         // <main> identifica o conteúdo principal da página.
