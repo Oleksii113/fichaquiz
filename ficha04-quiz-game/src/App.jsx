@@ -2,7 +2,7 @@ import { useState } from "react";
 
 /**
  * Propósito: controlar o fluxo principal do jogo através do estado da aplicação e validar os dados introduzidos pelo jogador antes de iniciar o jogo.
- * Produz/Devolve: diferentes ecrãs da aplicação conforme o estado atual do jogo, incluindo preparação, jogo em curso e fim do jogo.
+ * Produz/Devolve: diferentes ecrãs da aplicação conforme o estado atual do jogo, incluindo prepar jogo, jogo em curso e fim do jogo.
  * @returns {JSX.Element} renderiza a interface correspondente aos estados "idle", "playing" ou "finished".
  */
 function App() {
