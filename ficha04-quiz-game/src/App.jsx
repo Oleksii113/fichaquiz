@@ -1,9 +1,9 @@
 import { useState } from "react";
 
 /**
- * Propósito: [Completa: explica como este componente controla o ecrã atual do jogo.]
- * Produz/Devolve: [Completa: descreve os ecrãs que podem ser renderizados conforme gameStatus.]
- * @returns {JSX.Element} [Completa: indica o JSX produzido para idle, playing ou finished.]
+ * Propósito: controlar o fluxo principal do jogo através do estado da aplicação e validar os dados introduzidos pelo jogador antes de iniciar o jogo.
+ * Produz/Devolve: diferentes ecrãs da aplicação conforme o estado atual do jogo, incluindo preparação, jogo em curso e fim do jogo.
+ * @returns {JSX.Element} renderiza a interface correspondente aos estados "idle", "playing" ou "finished".
  */
 function App() {
     // Nome escrito pelo jogador.
@@ -58,6 +58,12 @@ function App() {
 
                         <label className="form-row">
                             Nome do jogador
+                            {/*
+                            Num input controlado, o value vem sempre do state.
+                            O utilizador escreve, onChange recebe o novo texto, e setPlayerName sincroniza React com o input.
+                            Assim, a UI nunca depende de um valor escondido apenas dentro do DOM.
+                            */}
+                    
                             <input
                                 type="text"
                                 value={playerName}
@@ -70,6 +76,10 @@ function App() {
 
                         <label className="form-row">
                             Dificuldade
+                            {/*
+                            O select segue a mesma regra do input controlado.
+                            event.target.value contém o value da option escolhida e passa a ser a dificuldade oficial da app.
+                            */}
                             <select
                                 value={difficulty}
                                 onChange={(event) =>
