@@ -42,7 +42,11 @@ function App() {
     };
 
     return (
+        // <main> identifica o conteúdo principal da página.
+        // Além de ser semanticamente correto, ajuda leitores de ecrã e mantém a estrutura HTML organizada.
+        // A classe "app" concentra o fundo e o espaçamento global no CSS, evitando estilos espalhados pelo JSX.
         <main className="app">
+            {/* "quiz-shell" limita a largura para que o conteúdo continue legível em ecrãs grandes. */}
             <div className="quiz-shell">
                 <h1>Quiz Game</h1>
 
