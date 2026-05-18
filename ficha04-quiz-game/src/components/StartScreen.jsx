@@ -1,14 +1,14 @@
 /**
- * Propósito: [Completa: explica o papel deste componente no início do jogo.]
- * Produz/Devolve: [Completa: descreve o formulário inicial e o botão de arranque.]
- * @param {object} props - [Completa: identifica o conjunto de dados e callbacks recebidos do App.]
- * @param {string} props.playerName - [Completa: explica como este valor controla o input.]
- * @param {(name: string) => void} props.onPlayerNameChange - [Completa: explica quando este callback é chamado.]
- * @param {string} props.difficulty - [Completa: explica como este valor controla o select.]
- * @param {(difficulty: string) => void} props.onDifficultyChange - [Completa: explica como a dificuldade sobe para o componente pai.]
- * @param {boolean} props.canStartGame - [Completa: explica que regra este boolean representa.]
- * @param {() => void} props.onStartGame - [Completa: explica que ação é pedida ao pai quando o botão é clicado.]
- * @returns {JSX.Element} [Completa: descreve o JSX do ecrã inicial.]
+ * Propósito: apresentar o ecrã inicial do jogo e permitir ao jogador escolher nome e dificuldade e depois começar.
+ * Produz/Devolve: um formulário com input de nome, seleção de dificuldade, mensagen de validação do nome e botão para iniciar o jogo.
+ * @param {object} props - conjunto de dados e callbacks recebidos do componente App.
+ * @param {string} props.playerName - valor atual do nome do jogador no input controlado.
+ * @param {(name: string) => void} props.onPlayerNameChange - callback chamado quando o utilizador altera o texto do input.
+ * @param {string} props.difficulty - dificuldade que está atualmente selecionada no select.
+ * @param {(difficulty: string) => void} props.onDifficultyChange - callback usado para atualizar a dificuldade no componente pai.
+ * @param {boolean} props.canStartGame - indica se o jogador já pode começar o jogo ou não.
+ * @param {() => void} props.onStartGame - função chamada quando o jogador clica no botão para começar.
+ * @returns {JSX.Element} renderiza o ecrã inicial do "Quiz Game".
  */
 function StartScreen({
     // Valores controlados pelo componente pai.

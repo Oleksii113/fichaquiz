@@ -1,18 +1,18 @@
 import TimerBar from "./TimerBar.jsx";
 
 /**
- * Propósito: [Completa: explica como este componente apresenta uma pergunta jogável.]
- * Produz/Devolve: [Completa: descreve pergunta, respostas, temporizador e ação de timeout.]
- * @param {object} props - [Completa: descreve o conjunto de dados e ações vindos do App.]
- * @param {object} props.question - [Completa: explica que informação da pergunta é usada.]
- * @param {string[]} props.answers - [Completa: explica porque as respostas já chegam baralhadas.]
- * @param {number} props.questionNumber - [Completa: explica como este número aparece na interface.]
- * @param {number} props.totalQuestions - [Completa: explica porque o total é necessário.]
- * @param {number} props.timeLeft - [Completa: explica como o tempo altera os botões.]
- * @param {number} props.timeLimit - [Completa: explica porque o limite é necessário para o temporizador.]
- * @param {(answer: string) => void} props.onAnswer - [Completa: explica que valor é enviado ao pai.]
- * @param {() => void} props.onTimeout - [Completa: explica quando esta ação é usada.]
- * @returns {JSX.Element} [Completa: descreve o JSX da pergunta atual.]
+ * Propósito: apresentar a pergunta atual do jogo e permitir ao jogador escolher uma resposta.
+ * Produz/Devolve: a interface da pergunta com temporizador, respostas disponíveis e ações relacionadas com timeout.
+ * @param {object} props - conjunto de dados e callbacks enviados pelo componente App.
+ * @param {object} props.question - objeto que contém os dados da pergunta atual.
+ * @param {string[]} props.answers - lista de respostas já baralhadas para mostrar ao jogador.
+ * @param {number} props.questionNumber - número da pergunta atual apresentado na interface.
+ * @param {number} props.totalQuestions - total de perguntas do jogo.
+ * @param {number} props.timeLeft - tempo restante usado para controlar botões e temporizador.
+ * @param {number} props.timeLimit - tempo máximo da pergunta usado no cálculo da barra.
+ * @param {(answer: string) => void} props.onAnswer - callback chamado quando o jogador escolhe uma resposta.
+ * @param {() => void} props.onTimeout - callback usado quando o jogador avança após timeout.
+ * @returns {JSX.Element} renderiza o cartão da pergunta atual do jogo.
  */
 function QuestionCard({
     // Dados da pergunta atual.

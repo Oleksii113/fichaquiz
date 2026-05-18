@@ -1,10 +1,10 @@
 /**
- * Propósito: [Completa: explica como este componente representa visualmente o tempo.]
- * Produz/Devolve: [Completa: descreve o texto e a barra de progresso gerados.]
- * @param {object} props - [Completa: descreve as props necessárias para calcular a barra.]
- * @param {number} props.timeLeft - [Completa: explica que unidade representa e como afeta a UI.]
- * @param {number} props.timeLimit - [Completa: explica qual é o tempo total da pergunta.]
- * @returns {JSX.Element} [Completa: descreve o JSX do temporizador.]
+ * Propósito: mostrar visualmente o tempo restante da pergunta atual através de texto e barra de progresso com as cores.
+ * Produz/Devolve: um temporizador com segundos restantes e uma barra com as cores que diminui conforme o tempo passa.
+ * @param {object} props - props para controlar o temporizador visual.
+ * @param {number} props.timeLeft - quantidade de segundos restantes da pergunta atual.
+ * @param {number} props.timeLimit - tempo total disponível para responder à pergunta.
+ * @returns {JSX.Element} renderiza o temporizador da pergunta atual.
  */
 function TimerBar({ timeLeft, timeLimit }) {
     // Converte segundos restantes em percentagem para controlar a largura da barra.
