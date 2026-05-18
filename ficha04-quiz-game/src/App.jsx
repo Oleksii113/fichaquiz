@@ -3,6 +3,9 @@ import { localQuestions } from "./data/localQuestions";
 import QuestionCard from "./components/QuestionCard.jsx";
 import ResultScreen from "./components/ResultScreen.jsx";
 import StartScreen from "./components/StartScreen.jsx";
+import ErrorState from "./components/ErrorState.jsx";
+import LoadingState from "./components/LoadingState.jsx";
+import { fetchTriviaQuestions } from "./services/triviaApi";
 
 
 /**
@@ -62,6 +65,10 @@ function App() {
     // Exigir pelo menos 2 caracteres impede começar com texto vazio ou demasiado ambíguo.
     const canStartGame = cleanPlayerName.length >= 2;
 
+    const [questions, setQuestions] = useState(localQuestions);
+    const [errorMessage, setErrorMessage] = useState("");
+    const [gameRequest, setGameRequest] = useState(null);
+
     const startGame = () => {
         if (!canStartGame) return;
 
@@ -80,17 +87,7 @@ function App() {
         setGameStatus("idle");
     };
 
-    // Por agora, a fonte de perguntas é apenas o array local.
-    // Mais tarde, esta variável será substituída por state vindo da API.
-    // Esta etapa separa a mecânica do jogo da dificuldade adicional dos pedidos HTTP.
-    const questions = localQuestions;
-
-    // A pergunta atual é encontrada pelo índice guardado no state.
-    // Se currentQuestionIndex mudar, o React recalcula esta variável no render seguinte.
     const currentQuestion = questions[currentQuestionIndex];
-
-    // Guardamos o total numa variável para não repetir questions.length no JSX.
-    // Também torna mais fácil trocar perguntas locais por perguntas externas sem mexer em vários sítios.
     const totalQuestions = questions.length;
 
     /**

@@ -1,11 +1,11 @@
 /**
- * Propósito: [Completa: explica como este componente recupera de uma falha da API.]
- * Produz/Devolve: [Completa: descreve a mensagem de erro e as ações disponíveis.]
- * @param {object} props - [Completa: descreve os dados e callbacks usados neste ecrã.]
- * @param {string} props.message - [Completa: explica de onde vem a mensagem.]
- * @param {() => void} props.onUseLocalQuestions - [Completa: explica quando usar perguntas locais.]
- * @param {() => void} props.onReset - [Completa: explica como voltar ao ecrã inicial.]
- * @returns {JSX.Element} [Completa: descreve o JSX de erro.]
+ * Propósito: informar o utilizador sobre um erro ao carregar perguntas e permitir recuperar da situação.
+ * Produz/Devolve: um ecrã de erro com mensagem explicativa e botões de recuperação.
+ * @param {object} props - dados e callbacks necessários para mostrar e tratar o erro.
+ * @param {string} props.message - mensagem de erro recebida do componente App.
+ * @param {() => void} props.onUseLocalQuestions - callback usado para iniciar o jogo com perguntas locais.
+ * @param {() => void} props.onReset - callback usado para voltar ao ecrã inicial da aplicação.
+ * @returns {JSX.Element} renderiza o ecrã de erro da aplicação.
  */
 function ErrorState({ message, onUseLocalQuestions, onReset }) {
     return (
