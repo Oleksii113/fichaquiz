@@ -1,15 +1,15 @@
 /**
- * Propósito: mostrar feedback visual enquanto a aplicação espera pelo carregamento das perguntas.
- * Produz/Devolve: um ecrã simples de loading com mensagem informativa para o jogador.
- * @returns {JSX.Element} renderiza o estado visual de carregamento da aplicação.
+ * Propósito: informar o utilizador que a aplicação está a carregar perguntas e a tentar traduzir-las.
+ * Produz/Devolve: uma mensagem visual de carregamento e preparação do jogo.
+ * @returns {JSX.Element} devolve o JSX do ecrã de loading com informação sobre carregamento e tradução.
  */
 function LoadingState() {
     return (
         <section className="quiz-card">
-            {/* Este componente não precisa de state: só mostra feedback fixo.
-                O estado loading já foi decidido pelo App. */}
-            <h2>A carregar perguntas...</h2>
-            <p className="muted">O jogo vai começar dentro de instantes.</p>
+            <h2>A preparar perguntas...</h2>
+            <p className="muted">
+                A carregar perguntas e a tentar traduzir para português.
+            </p>
         </section>
     );
 }

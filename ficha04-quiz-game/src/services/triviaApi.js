@@ -1,3 +1,5 @@
+import { translateQuestionsToPortuguese } from "./translationApi";
+
 const TRIVIA_API_URL = "https://opentdb.com/api.php";
 
 /**
@@ -101,5 +103,7 @@ export async function fetchTriviaQuestions(difficulty, signal) {
 
     // A UI recebe sempre perguntas no nosso formato interno.
     // Esta linha é a fronteira entre "dados externos" e "dados prontos para React".
-    return data.results.map(normalizeQuestion);
+    const normalizedQuestions = data.results.map(normalizeQuestion);
+
+    return translateQuestionsToPortuguese(normalizedQuestions, signal);
 }
