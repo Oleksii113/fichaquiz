@@ -79,6 +79,11 @@ export async function translateQuestionToPortuguese(question, signal) {
         // Se engolíssemos este erro, a app poderia tratar um cancelamento como tradução falhada normal.
         if (error.name === "AbortError") throw error;
 
+        // Coloquei isto porqu no console aparecia o erro 429 (Too Many Requests).
+        if (error?.status === 429) {
+            return text;
+        }
+
         // Se a tradução falhar, mantemos a pergunta original em inglês.
         // Este fallback preserva o jogo mesmo quando a segunda API está indisponível.
         return question;
