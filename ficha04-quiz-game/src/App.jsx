@@ -1,11 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { localQuestions } from "./data/localQuestions";
 
-/**
- * Propósito: controlar o fluxo principal do jogo através do estado da aplicação e validar os dados introduzidos pelo jogador antes de iniciar o jogo.
- * Produz/Devolve: diferentes ecrãs da aplicação conforme o estado atual do jogo, incluindo prepar jogo, jogo em curso e fim do jogo.
- * @returns {JSX.Element} renderiza a interface correspondente aos estados "idle", "playing" ou "finished".
- */
 
 /**
  * Propósito: criar uma nova ordem aleatória das respostas sem alterar o array original recebido pela função.
@@ -13,12 +8,6 @@ import { localQuestions } from "./data/localQuestions";
  * @param {string[]} items - lista de respostas da pergunta atual que será baralhada.
  * @returns {string[]} devolve um novo array com as respostas numa ordem aleatória.
  */
-
-// Tempo inicial de cada pergunta.
-// Usar uma constante evita repetir o número 15 em vários sítios.
-// Se a regra mudar para 20 segundos, alteramos apenas esta linha.
-const QUESTION_TIME_LIMIT = 15;
-
 function shuffleItems(items) {
     // [...items] cria uma cópia. Assim, não alteramos o array original.
     // Isto é importante porque arrays recebidos de state ou props não devem ser mutados diretamente.
@@ -26,6 +15,16 @@ function shuffleItems(items) {
     return [...items].sort(() => Math.random() - 0.5);
 }
 
+// Tempo inicial de cada pergunta.
+// Usar uma constante evita repetir o número 15 em vários sítios.
+// Se a regra mudar para 20 segundos, alteramos apenas esta linha.
+const QUESTION_TIME_LIMIT = 15;
+
+/**
+ * Propósito: controlar o fluxo principal do jogo através do estado da aplicação e validar os dados introduzidos pelo jogador antes de iniciar o jogo.
+ * Produz/Devolve: diferentes ecrãs da aplicação conforme o estado atual do jogo, incluindo prepar jogo, jogo em curso e fim do jogo.
+ * @returns {JSX.Element} renderiza a interface correspondente aos estados "idle", "playing" ou "finished".
+ */
 function App() {
     // Índice da pergunta atual dentro do array de perguntas.
     // Começa em 0 porque arrays em JavaScript começam no índice 0.
@@ -179,6 +178,17 @@ function App() {
         // Se outro state mudar, como o tema, estas estatísticas não precisam de ser recalculadas.
     }, [answerResults, totalQuestions]);
 
+    /**
+     * Propósito: tratar situações em que o jogador não responde antes do tempo terminar e avançar o jogo automaticamente.
+     * Produz/Devolve: não devolve valor diretamente mas reutiliza a lógica de resposta errada e atualiza o progresso do jogo.
+     */
+    const handleTimeout = () => {
+        // Reutilizamos handleAnswer para não duplicar lógica de avanço.
+        // A string vazia nunca será igual à resposta certa, por isso conta como errada.
+        // Assim, timeout e clique numa resposta seguem o mesmo caminho de atualização.
+        handleAnswer("");
+    };
+
     useEffect(() => {
         // O temporizador só deve correr durante o jogo.
         // Se estivermos no menu, loading, erro ou resultado, não faz nada.
@@ -293,21 +303,34 @@ function App() {
                             <h2>{currentQuestion.question}</h2>
 
                             <div className="answer-grid">
-                                {currentAnswers.map((answer) => (
-                                    /*
-                                Cada resposta gera um botão.
-                                A key ajuda o React a identificar cada item.
-                                */
-                                    <button
-                                        key={answer}
-                                        type="button"
-                                        className="answer-button"
-                                        onClick={() => handleAnswer(answer)}
-                                    >
-                                        {answer}
-                                    </button>
-                                ))}
+                                {
+                                    currentAnswers.map((answer, index) => (
+                                        <button
+                                            key={`${currentQuestion.id}-${index}-${answer}`}
+                                            type="button"
+                                            className="answer-button"
+                                            onClick={() => handleAnswer(answer)}
+                                            disabled={timeLeft === 0}
+                                        >
+                                            {answer}
+                                        </button>
+                                    ))
+                                }
                             </div>
+                            {
+                                timeLeft === 0 && (
+                                    <div className="button-row">
+                                        <p className="error-text">Tempo esgotado.</p>
+                                        <button
+                                            type="button"
+                                            className="button-secondary"
+                                            onClick={handleTimeout}
+                                        >
+                                            Avançar
+                                        </button>
+                                    </div>
+                                )
+                            }
                         </section>
                     )
                 }
