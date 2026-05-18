@@ -6,6 +6,7 @@ import StartScreen from "./components/StartScreen.jsx";
 import ErrorState from "./components/ErrorState.jsx";
 import LoadingState from "./components/LoadingState.jsx";
 import { fetchTriviaQuestions } from "./services/triviaApi";
+import { useGameSettings } from "./context/GameSettingsContext.jsx";
 
 
 /**
@@ -37,13 +38,14 @@ function App() {
     // Guardar só o índice é mais simples do que duplicar a pergunta inteira em state.
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
 
-    // Nome escrito pelo jogador.
-    // É atualizado a cada tecla e usado depois para validação e resultado final.
-    const [playerName, setPlayerName] = useState("");
-
-    // Dificuldade escolhida no select.
-    // Mais tarde será enviada para a API para pedir perguntas adequadas.
-    const [difficulty, setDifficulty] = useState("easy");
+    const {
+        playerName,
+        setPlayerName,
+        difficulty,
+        setDifficulty,
+        theme,
+        toggleTheme,
+    } = useGameSettings();
 
     // Estado que decide que "ecrã" a app mostra neste momento.
     // Guardar isto num único state evita vários booleans soltos como isPlaying, isFinished, isLoading.
@@ -86,8 +88,12 @@ function App() {
 
     const resetGame = () => {
         // Volta ao ecrã inicial.
-        // Nesta fase ainda não limpamos tudo, porque o objetivo é apenas testar transições.
+        // Mantemos nome e dificuldade para o utilizador poder corrigir ou tentar outra vez sem recomeçar tudo.
         setGameStatus("idle");
+
+        // Limpa erro antigo para a próxima tentativa começar limpa.
+        // Sem esta limpeza, uma mensagem antiga poderia aparecer num fluxo que já não está em erro.
+        setErrorMessage("");
     };
 
     const currentQuestion = questions[currentQuestionIndex];
@@ -192,6 +198,24 @@ function App() {
         handleAnswer("");
     };
 
+    const startLocalGame = () => {
+        // Usa as perguntas locais já criadas no início da ficha.
+        // Este fallback evita que a app dependa totalmente da disponibilidade da API pública.
+        setQuestions(localQuestions);
+
+        // Reinicia o progresso do jogo.
+        // Ao mudar de fonte de dados, índice, respostas e tempo têm de voltar ao estado inicial.
+        setCurrentQuestionIndex(0);
+        setAnswerResults([]);
+        answeredQuestionRef.current = -1;
+        setTimeLeft(QUESTION_TIME_LIMIT);
+
+        // Limpa o erro antigo e entra diretamente no jogo.
+        // A partir daqui, a UI deixa de mostrar ErrorState e passa a mostrar QuestionCard.
+        setErrorMessage("");
+        setGameStatus("playing");
+    };
+
     useEffect(() => {
         // O temporizador só deve correr durante o jogo.
         // Se estivermos no menu, loading, erro ou resultado, não faz nada.
@@ -220,12 +244,86 @@ function App() {
         // Se um destes valores mudar, o React reavalia se deve continuar a contar.
     }, [gameStatus, timeLeft]);
 
+    useEffect(() => {
+        // Enquanto gameRequest for null, nenhum jogo foi pedido.
+        // Esta guarda impede que a API seja chamada automaticamente no primeiro render.
+        if (!gameRequest) return;
+
+        // AbortController permite cancelar este fetch no cleanup.
+        // É uma proteção contra respostas atrasadas quando o utilizador muda de fluxo rapidamente.
+        const controller = new AbortController();
+
+        async function loadQuestions() {
+            try {
+                // Antes do pedido, mostramos o ecrã de loading.
+                // Isto dá feedback imediato e evita parecer que o botão não fez nada.
+                setGameStatus("loading");
+
+                // Limpamos erros antigos para não mostrar mensagens desatualizadas.
+                // Um erro de uma tentativa anterior não deve aparecer durante uma nova tentativa.
+                setErrorMessage("");
+
+                // Um novo jogo recomeça sempre do início.
+                // A API pode devolver uma lista nova, por isso o índice e os resultados antigos deixam de fazer sentido.
+                setCurrentQuestionIndex(0);
+                setAnswerResults([]);
+                answeredQuestionRef.current = -1;
+                setTimeLeft(QUESTION_TIME_LIMIT);
+
+                // Pedido real à API. A dificuldade vem do pedido criado no clique.
+                // Assim, alterar difficulty depois do jogo começar não dispara novo fetch.
+                // O App coordena quando pedir dados; o serviço sabe como fazer o pedido.
+                const apiQuestions = await fetchTriviaQuestions(
+                    gameRequest.difficulty,
+                    controller.signal,
+                );
+
+                // Guardamos as perguntas recebidas no state.
+                // Quando este state muda, o ecrã de pergunta passa a usar a lista externa.
+                setQuestions(apiQuestions);
+
+                // Só depois de ter perguntas é que entramos no modo playing.
+                // Isto evita renderizar QuestionCard sem dados suficientes.
+                setGameStatus("playing");
+            } catch (error) {
+                // Se o erro foi causado por cancelamento, não mostramos erro ao utilizador.
+                // Cancelamento é uma decisão normal da app, não uma falha que o aluno precise de ver.
+                if (error.name === "AbortError") return;
+
+                // Guardamos mensagem para o ErrorState.
+                // Separar mensagem e estado visual torna o erro mais fácil de apresentar.
+                setErrorMessage(error.message);
+
+                // Mantemos perguntas locais como fallback interno para a app continuar consistente.
+                // Mesmo quando a API falha, o formato das perguntas continua válido.
+                setQuestions(localQuestions);
+
+                // Estado próprio de erro para renderização condicional.
+                // Assim a UI mostra uma recuperação clara em vez de ficar presa no loading.
+                setGameStatus("error");
+            }
+        }
+
+        loadQuestions();
+
+        // Cleanup: cancela o pedido se este efeito for substituído ou desmontado.
+        // Este padrão evita efeitos antigos a interferirem com o estado atual.
+        return () => {
+            controller.abort();
+        };
+        // O pedido deve correr apenas quando existe um novo pedido explícito de jogo.
+        // A dificuldade usada já ficou guardada dentro de gameRequest.
+    }, [gameRequest]);
+
     return (
         // <main> identifica o conteúdo principal da página.
         // Além de ser semanticamente correto, ajuda leitores de ecrã e mantém a estrutura HTML organizada.
         // A classe "app" concentra o fundo e o espaçamento global no CSS, evitando estilos espalhados pelo JSX.
-        <main className="app">
+        <main className={`app ${theme === "dark" ? "app--dark" : ""}`}>
             {/* "quiz-shell" limita a largura para que o conteúdo continue legível em ecrãs grandes. */}
+            <button type="button" className="button-secondary" onClick={toggleTheme}>
+                Alternar tema
+            </button>
             <div className="quiz-shell">
                 <h1>Quiz Game</h1>
                 <p>Responde a perguntas para testar conhecimentos.</p>
@@ -242,6 +340,16 @@ function App() {
                     )
                 }
 
+                {gameStatus === "loading" && <LoadingState />}
+
+                {gameStatus === "error" && (
+                    <ErrorState
+                        message={errorMessage}
+                        onUseLocalQuestions={startLocalGame}
+                        onReset={resetGame}
+                    />
+                )}
+                
                 {
                     gameStatus === "playing" && currentQuestion && (
                         <QuestionCard
