@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import ErrorState from "./components/ErrorState.jsx";
+import LoadingState from "./components/LoadingState.jsx";
 import QuestionCard from "./components/QuestionCard.jsx";
 import ResultScreen from "./components/ResultScreen.jsx";
 import StartScreen from "./components/StartScreen.jsx";
-import ErrorState from "./components/ErrorState.jsx";
-import LoadingState from "./components/LoadingState.jsx";
-import { fetchTriviaQuestions } from "./services/triviaApi";
 import { useGameSettings } from "./context/GameSettingsContext.jsx";
 import { localQuestions } from "./data/localQuestions";
+import { fetchTriviaQuestions } from "./services/triviaApi";
 
 // Tempo inicial de cada pergunta.
 // Usar uma constante evita repetir o número 15 em vários sítios.
@@ -90,71 +90,6 @@ function App() {
     // Usar questions.length evita referências antigas a localQuestions.length.
     const totalQuestions = questions.length;
 
-    const startGame = () => {
-        if (!canStartGame) return;
-
-        // Libertamos qualquer bloqueio de resposta antes de pedir um novo jogo.
-        answeredQuestionRef.current = -1;
-
-        // gameRequest representa a intenção explícita de iniciar um jogo.
-        // Guardamos a dificuldade neste momento para mudanças posteriores no select
-        // não dispararem outro pedido sem novo clique em "Começar jogo".
-        setGameRequest({
-            id: Date.now(),
-            difficulty,
-        });
-    };
-
-    const resetGame = () => {
-        // Volta ao ecrã inicial.
-        // Mantemos nome e dificuldade para o utilizador poder corrigir ou tentar outra vez sem recomeçar tudo.
-        setGameStatus("idle");
-
-        // Limpa erro antigo para a próxima tentativa começar limpa.
-        // Sem esta limpeza, uma mensagem antiga poderia aparecer num fluxo que já não está em erro.
-        setErrorMessage("");
-    };
-
-    const currentQuestion = questions[currentQuestionIndex];
-    const totalQuestions = questions.length;
-
-    /**
-     * Propósito: avaliar a resposta selecionada pelo jogador, guardar o resultado e avançar para a próxima pergunta ou terminar o jogo.
-     * Produz/Devolve: não devolve valor diretamente mas atualiza o estado das respostas, da pergunta atual e do estado do jogo.
-     * @param {string} selectedAnswer - resposta escolhida pelo jogador através dos botões de resposta da pergunta atual.
-     */
-    const handleAnswer = (selectedAnswer) => {
-        // Compara a resposta escolhida com a resposta certa da pergunta atual.
-        // A comparação é direta porque cada botão envia exatamente o texto da resposta.
-        const isCorrect = selectedAnswer === currentQuestion.correctAnswer;
-
-        // Criamos um novo array para respeitar a regra de imutabilidade do React.
-        // Nunca fazemos answerResults.push(...), porque isso altera o array antigo e pode impedir o React de detetar a mudança.
-        const updatedResults = [...answerResults, isCorrect];
-
-        // Atualiza o histórico de respostas.
-        // Depois deste setState, a próxima renderização já terá o novo resultado incluído.
-        setAnswerResults(updatedResults);
-
-        // Estamos na última pergunta se o índice atual for o último índice do array.
-        // Como os índices começam em 0, o último índice é questions.length - 1.
-        const isLastQuestion = currentQuestionIndex === questions.length - 1;
-
-        if (isLastQuestion) {
-            // Se era a última pergunta, o jogo termina.
-            // Mudamos de ecrã em vez de tentar avançar para uma pergunta que não existe.
-            setGameStatus("finished");
-            return;
-        }
-
-        // Caso contrário, avança uma posição no array.
-        // Usamos atualização funcional para trabalhar sempre com o índice mais recente.
-        // Quando avança para a próxima pergunta, o temporizador reinicia.
-        // Esta linha fica junto do avanço para manter índice e tempo sincronizados.
-        setCurrentQuestionIndex((previousIndex) => previousIndex + 1);
-        setTimeLeft(QUESTION_TIME_LIMIT);
-    };
-
     const currentAnswers = useMemo(() => {
         // Durante alguns renders, pode ainda não existir pergunta atual.
         // Nesse caso, devolvemos array vazio para evitar erros no .map().
@@ -206,36 +141,7 @@ function App() {
         // Se outro state mudar, como o tema, estas estatísticas não precisam de ser recalculadas.
     }, [answerResults, totalQuestions]);
 
-    /**
-     * Propósito: tratar situações em que o jogador não responde antes do tempo terminar e isso faz com que botão "avançar conta a resposta como errada".
-     * Produz/Devolve: não devolve valor diretamente mas reutiliza a lógica de resposta errada e atualiza o progresso do jogo.
-    */
-    const handleTimeout = () => {
-        // Reutilizamos handleAnswer para não duplicar lógica de avanço.
-        // A string vazia nunca será igual à resposta certa, por isso conta como errada.
-        // Assim, timeout e clique numa resposta seguem o mesmo caminho de atualização.
-        handleAnswer("");
-    };
-
-    const startLocalGame = () => {
-        // Usa as perguntas locais já criadas no início da ficha.
-        // Este fallback evita que a app dependa totalmente da disponibilidade da API pública.
-        setQuestions(localQuestions);
-
-        // Reinicia o progresso do jogo.
-        // Ao mudar de fonte de dados, índice, respostas e tempo têm de voltar ao estado inicial.
-        setCurrentQuestionIndex(0);
-        setAnswerResults([]);
-        answeredQuestionRef.current = -1;
-        setTimeLeft(QUESTION_TIME_LIMIT);
-
-        // Limpa o erro antigo e entra diretamente no jogo.
-        // A partir daqui, a UI deixa de mostrar ErrorState e passa a mostrar QuestionCard.
-        setErrorMessage("");
-        setGameStatus("playing");
-    };
-
-    useEffect(() => {
+     useEffect(() => {
         // O temporizador só deve correr durante o jogo.
         // Se estivermos no menu, loading, erro ou resultado, não faz nada.
         // Esta guarda impede contagens invisíveis quando o utilizador não está a responder.
@@ -333,6 +239,102 @@ function App() {
         // O pedido deve correr apenas quando existe um novo pedido explícito de jogo.
         // A dificuldade usada já ficou guardada dentro de gameRequest.
     }, [gameRequest]);
+
+    const startGame = () => {
+        if (!canStartGame) return;
+
+        // Libertamos qualquer bloqueio de resposta antes de pedir um novo jogo.
+        answeredQuestionRef.current = -1;
+
+        // gameRequest representa a intenção explícita de iniciar um jogo.
+        // Guardamos a dificuldade neste momento para mudanças posteriores no select
+        // não dispararem outro pedido sem novo clique em "Começar jogo".
+        setGameRequest({
+            id: Date.now(),
+            difficulty,
+        });
+    };
+
+    const resetGame = () => {
+        // Volta ao ecrã inicial.
+        // Mantemos nome e dificuldade para o utilizador poder corrigir ou tentar outra vez sem recomeçar tudo.
+        setGameStatus("idle");
+
+        // Limpa erro antigo para a próxima tentativa começar limpa.
+        // Sem esta limpeza, uma mensagem antiga poderia aparecer num fluxo que já não está em erro.
+        setErrorMessage("");
+    };
+
+    const startLocalGame = () => {
+        // Usa as perguntas locais já criadas no início da ficha.
+        // Este fallback evita que a app dependa totalmente da disponibilidade da API pública.
+        setQuestions(localQuestions);
+
+        // Reinicia o progresso do jogo.
+        // Ao mudar de fonte de dados, índice, respostas e tempo têm de voltar ao estado inicial.
+        setCurrentQuestionIndex(0);
+        setAnswerResults([]);
+        answeredQuestionRef.current = -1;
+        setTimeLeft(QUESTION_TIME_LIMIT);
+
+        // Limpa o erro antigo e entra diretamente no jogo.
+        // A partir daqui, a UI deixa de mostrar ErrorState e passa a mostrar QuestionCard.
+        setErrorMessage("");
+        setGameStatus("playing");
+    };
+
+    /**
+     * Propósito: avaliar a resposta selecionada pelo jogador, guardar o resultado e avançar para a próxima pergunta ou terminar o jogo.
+     * Produz/Devolve: não devolve valor diretamente mas atualiza o estado das respostas, da pergunta atual e do estado do jogo.
+     * @param {string} selectedAnswer - resposta escolhida pelo jogador através dos botões de resposta da pergunta atual.
+     */
+    const handleAnswer = (selectedAnswer) => {
+        // Evita que a mesma pergunta seja respondida duas vezes por duplo clique.
+        // A ref é atualizada imediatamente, sem esperar por nova renderização.
+        if (answeredQuestionRef.current === currentQuestionIndex) return;
+
+        answeredQuestionRef.current = currentQuestionIndex;
+        // Compara a resposta escolhida com a resposta certa da pergunta atual.
+        // A comparação é direta porque cada botão envia exatamente o texto da resposta.
+        const isCorrect = selectedAnswer === currentQuestion.correctAnswer;
+
+        // Criamos um novo array para respeitar a regra de imutabilidade do React.
+        // Nunca fazemos answerResults.push(...), porque isso altera o array antigo e pode impedir o React de detetar a mudança.
+        const updatedResults = [...answerResults, isCorrect];
+
+        // Atualiza o histórico de respostas.
+        // Depois deste setState, a próxima renderização já terá o novo resultado incluído.
+        setAnswerResults(updatedResults);
+
+        // Estamos na última pergunta se o índice atual for o último índice do array.
+        // Como os índices começam em 0, o último índice é questions.length - 1.
+        const isLastQuestion = currentQuestionIndex === questions.length - 1;
+
+        if (isLastQuestion) {
+            // Se era a última pergunta, o jogo termina.
+            // Mudamos de ecrã em vez de tentar avançar para uma pergunta que não existe.
+            setGameStatus("finished");
+            return;
+        }
+
+        // Caso contrário, avança uma posição no array.
+        // Usamos atualização funcional para trabalhar sempre com o índice mais recente.
+        // Quando avança para a próxima pergunta, o temporizador reinicia.
+        // Esta linha fica junto do avanço para manter índice e tempo sincronizados.
+        setCurrentQuestionIndex((previousIndex) => previousIndex + 1);
+        setTimeLeft(QUESTION_TIME_LIMIT);
+    };
+
+    /**
+     * Propósito: tratar situações em que o jogador não responde antes do tempo terminar e isso faz com que botão "avançar conta a resposta como errada".
+     * Produz/Devolve: não devolve valor diretamente mas reutiliza a lógica de resposta errada e atualiza o progresso do jogo.
+    */
+    const handleTimeout = () => {
+        // Reutilizamos handleAnswer para não duplicar lógica de avanço.
+        // A string vazia nunca será igual à resposta certa, por isso conta como errada.
+        // Assim, timeout e clique numa resposta seguem o mesmo caminho de atualização.
+        handleAnswer("");
+    };
 
     return (
         // <main> identifica o conteúdo principal da página.
