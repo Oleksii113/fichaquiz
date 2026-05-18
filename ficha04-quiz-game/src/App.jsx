@@ -1,5 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
-import { localQuestions } from "./data/localQuestions";
+import { useEffect, useMemo, useRef, useState } from "react";
 import QuestionCard from "./components/QuestionCard.jsx";
 import ResultScreen from "./components/ResultScreen.jsx";
 import StartScreen from "./components/StartScreen.jsx";
@@ -7,7 +6,12 @@ import ErrorState from "./components/ErrorState.jsx";
 import LoadingState from "./components/LoadingState.jsx";
 import { fetchTriviaQuestions } from "./services/triviaApi";
 import { useGameSettings } from "./context/GameSettingsContext.jsx";
+import { localQuestions } from "./data/localQuestions";
 
+// Tempo inicial de cada pergunta.
+// Usar uma constante evita repetir o número 15 em vários sítios.
+// Se a regra mudar para 20 segundos, alteramos apenas esta linha.
+const QUESTION_TIME_LIMIT = 15;
 
 /**
  * Propósito: criar uma nova ordem aleatória das respostas sem alterar o array original recebido pela função.
@@ -22,22 +26,12 @@ function shuffleItems(items) {
     return [...items].sort(() => Math.random() - 0.5);
 }
 
-// Tempo inicial de cada pergunta.
-// Usar uma constante evita repetir o número 15 em vários sítios.
-// Se a regra mudar para 20 segundos, alteramos apenas esta linha.
-const QUESTION_TIME_LIMIT = 15;
-
 /**
  * Propósito: controlar o fluxo principal do jogo através do estado da aplicação e validar os dados introduzidos pelo jogador antes de iniciar o jogo.
  * Produz/Devolve: diferentes ecrãs da aplicação conforme o estado atual do jogo, incluindo prepar jogo, jogo em curso e fim do jogo.
  * @returns {JSX.Element} renderiza a interface correspondente aos estados "idle", "playing" ou "finished".
  */
 function App() {
-    // Índice da pergunta atual dentro do array de perguntas.
-    // Começa em 0 porque arrays em JavaScript começam no índice 0.
-    // Guardar só o índice é mais simples do que duplicar a pergunta inteira em state.
-    const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-
     const {
         playerName,
         setPlayerName,
@@ -51,14 +45,35 @@ function App() {
     // Guardar isto num único state evita vários booleans soltos como isPlaying, isFinished, isLoading.
     const [gameStatus, setGameStatus] = useState("idle");
 
-    // Guarda um boolean por cada resposta:
-    // true = certa, false = errada.
-    // Este formato é simples de contar com filter(Boolean) e evita guardar texto desnecessário.
+    // Lista de perguntas atualmente usada pelo jogo.
+    // Começa com perguntas locais para a app ter uma base segura.
+    // Depois da API, este mesmo state passa a guardar perguntas externas traduzidas quando possível.
+    const [questions, setQuestions] = useState(localQuestions);
+
+    // Índice da pergunta atual dentro de questions.
+    // Guardar o índice mantém a pergunta atual derivada da lista, em vez de duplicar objetos em state.
+    const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+
+    // Histórico de resultados: true para certa, false para errada.
+    // Este array é suficiente para calcular pontuação, percentagem e objetivo atingido.
     const [answerResults, setAnswerResults] = useState([]);
 
     // Tempo restante da pergunta atual.
     // Este valor muda com o temporizador e também é reposto quando passamos para outra pergunta.
     const [timeLeft, setTimeLeft] = useState(QUESTION_TIME_LIMIT);
+
+    // Bloqueia respostas repetidas na mesma pergunta.
+    // useRef muda imediatamente e evita duplo clique antes do próximo render.
+    const answeredQuestionRef = useRef(-1);
+
+    // Mensagem mostrada quando o pedido à API falha.
+    // Guardamos a mensagem separada para o ErrorState poder apresentar feedback específico.
+    const [errorMessage, setErrorMessage] = useState("");
+
+    // Pedido explícito para iniciar um novo jogo via useEffect.
+    // Guardamos a dificuldade escolhida no momento do clique em "Começar jogo".
+    // Assim, mudar a dificuldade depois não dispara outro pedido automaticamente.
+    const [gameRequest, setGameRequest] = useState(null);
 
     // trim remove espaços no início/fim para evitar nomes que parecem preenchidos mas não têm caracteres úteis.
     const cleanPlayerName = playerName.trim();
@@ -67,9 +82,13 @@ function App() {
     // Exigir pelo menos 2 caracteres impede começar com texto vazio ou demasiado ambíguo.
     const canStartGame = cleanPlayerName.length >= 2;
 
-    const [questions, setQuestions] = useState(localQuestions);
-    const [errorMessage, setErrorMessage] = useState("");
-    const [gameRequest, setGameRequest] = useState(null);
+    // Pergunta atual derivada do array e do índice.
+    // Se a lista mudar ou o índice mudar, esta variável acompanha automaticamente.
+    const currentQuestion = questions[currentQuestionIndex];
+
+    // Total atual. Depois da API, pode ser diferente das perguntas locais.
+    // Usar questions.length evita referências antigas a localQuestions.length.
+    const totalQuestions = questions.length;
 
     const startGame = () => {
         if (!canStartGame) return;
