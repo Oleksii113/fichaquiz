@@ -4,10 +4,11 @@
  * @param {object} props - dados finais e callbacks recebidos do App.
  * @param {string} props.playerName - nome do jogador apresentado no resultado final.
  * @param {object} props.stats - objeto com estatísticas calculadas do jogo.
+ * @param {object | null} props.bestScore - melhor pontuação guardada no localStorage.
  * @param {() => void} props.onReset - callback chamado para voltar ao início do jogo.
  * @returns {JSX.Element} renderiza o ecrã final do "Quiz Game".
  */
-function ResultScreen({ playerName, stats, onReset }) {
+function ResultScreen({playerName, stats, bestScore, onReset,}) {
     // Medalha depende da percentagem final do jogador.
     // Quanto melhor o desempenho, melhor a medalha apresentada.
     let medal = "🎯";
@@ -34,6 +35,17 @@ function ResultScreen({ playerName, stats, onReset }) {
             <p className="result-medal">
                 Medalha: {medal}
             </p>   
+            {bestScore && (
+                <div className="best-score-box">
+                    <h3>Melhor pontuação</h3>
+
+                    <p>Jogador: {bestScore.playerName}</p>
+                    <p>Pontuação: {bestScore.score}</p>
+                    <p>Percentagem: {bestScore.percentage}%</p>
+                    <p>Dificuldade: {bestScore.difficulty}</p>
+                    <p>Data: {bestScore.date}</p>
+                </div>
+            )}
             <button type="button" className="button-primary" onClick={onReset}>
                 Voltar ao início
             </button>

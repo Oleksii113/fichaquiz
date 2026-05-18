@@ -72,6 +72,14 @@ function App() {
     // Guardamos a mensagem separada para o ErrorState poder apresentar feedback específico.
     const [errorMessage, setErrorMessage] = useState("");
 
+    // Melhor pontuação guardada no browser.
+    // localStorage permite manter dados mesmo após atualizar a página.
+    const [bestScore, setBestScore] = useState(() => {
+        const savedScore = localStorage.getItem("best-score");
+
+        return savedScore ? JSON.parse(savedScore) : null;
+    });
+
     // Pedido explícito para iniciar um novo jogo via useEffect.
     // Guardamos a dificuldade escolhida no momento do clique em "Começar jogo".
     // Assim, mudar a dificuldade depois não dispara outro pedido automaticamente.
@@ -306,6 +314,37 @@ function App() {
         // Nunca fazemos answerResults.push(...), porque isso altera o array antigo e pode impedir o React de detetar a mudança.
         const updatedResults = [...answerResults, isCorrect];
 
+        // Se esta resposta terminar o jogo, calculamos estatísticas finais
+        // para decidir se existe uma nova melhor pontuação.
+        if (currentQuestionIndex === questions.length - 1) {
+            const finalCorrectAnswers = updatedResults.filter(Boolean).length;
+
+            const finalPercentage = Math.round(
+                (finalCorrectAnswers / questions.length) * 100,
+            );
+
+            const finalScore = finalCorrectAnswers * 100;
+
+            const newBestScore = {
+                playerName: cleanPlayerName,
+                score: finalScore,
+                percentage: finalPercentage,
+                difficulty,
+                date: new Date().toLocaleDateString("pt-PT"),
+            };
+
+            // Guardamos apenas se não existir pontuação anterior
+            // ou se a nova pontuação for melhor.
+            if (!bestScore || finalScore > bestScore.score) {
+                localStorage.setItem(
+                    "best-score",
+                    JSON.stringify(newBestScore),
+                );
+
+                setBestScore(newBestScore);
+            }
+        }
+
         // Atualiza o histórico de respostas.
         // Depois deste setState, a próxima renderização já terá o novo resultado incluído.
         setAnswerResults(updatedResults);
@@ -397,6 +436,7 @@ function App() {
                         <ResultScreen
                             playerName={cleanPlayerName}
                             stats={gameStats}
+                            bestScore={bestScore}
                             onReset={resetGame}
                         />
                     )
