@@ -179,9 +179,9 @@ function App() {
     }, [answerResults, totalQuestions]);
 
     /**
-     * Propósito: tratar situações em que o jogador não responde antes do tempo terminar e avançar o jogo automaticamente.
+     * Propósito: tratar situações em que o jogador não responde antes do tempo terminar e isso faz com que botão "avançar conta a resposta como errada".
      * Produz/Devolve: não devolve valor diretamente mas reutiliza a lógica de resposta errada e atualiza o progresso do jogo.
-     */
+    */
     const handleTimeout = () => {
         // Reutilizamos handleAnswer para não duplicar lógica de avanço.
         // A string vazia nunca será igual à resposta certa, por isso conta como errada.
