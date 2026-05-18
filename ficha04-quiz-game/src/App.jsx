@@ -296,9 +296,14 @@ function App() {
     };
 
     /**
-     * Propósito: avaliar a resposta selecionada pelo jogador, guardar o resultado e avançar para a próxima pergunta ou terminar o jogo.
-     * Produz/Devolve: não devolve valor diretamente mas atualiza o estado das respostas, da pergunta atual e do estado do jogo.
-     * @param {string} selectedAnswer - resposta escolhida pelo jogador através dos botões de resposta da pergunta atual.
+     * Propósito: avaliar a resposta selecionada pelo jogador, guardar o resultado,
+     * avançar para a próxima pergunta ou terminar o jogo e calcular estatísticas finais,
+     * incluindo a melhor pontuação (localStorage).
+     *
+     * Produz/Devolve: não devolve valor diretamente, mas atualiza o estado das respostas,
+     * da pergunta atual e do estado do jogo. Pode também atualizar a melhor pontuação.
+     *
+     * @param {string} selectedAnswer - resposta escolhida pelo jogador através dos botões.
      */
     const handleAnswer = (selectedAnswer) => {
         // Evita que a mesma pergunta seja respondida duas vezes por duplo clique.

@@ -17,6 +17,7 @@ export function GameSettingsProvider({ children }) {
     const [playerName, setPlayerName] = useState("");
     const [difficulty, setDifficulty] = useState("easy");
     const [theme, setTheme] = useState("light");
+    // Quantidade das perguntas. Primeiro vai mostrar 5 mas depois vamos poder escolher 10.
     const [questionAmount, setQuestionAmount] = useState(5);
 
     const value = useMemo(() => {
