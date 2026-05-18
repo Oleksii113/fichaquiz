@@ -72,13 +72,16 @@ function App() {
     const startGame = () => {
         if (!canStartGame) return;
 
-        setCurrentQuestionIndex(0);
-        setAnswerResults([]);
+        // Libertamos qualquer bloqueio de resposta antes de pedir um novo jogo.
+        answeredQuestionRef.current = -1;
 
-        // Cada jogo começa com o tempo completo.
-        // Isto evita herdar o tempo que sobrou da tentativa anterior.
-        setTimeLeft(QUESTION_TIME_LIMIT);
-        setGameStatus("playing");
+        // gameRequest representa a intenção explícita de iniciar um jogo.
+        // Guardamos a dificuldade neste momento para mudanças posteriores no select
+        // não dispararem outro pedido sem novo clique em "Começar jogo".
+        setGameRequest({
+            id: Date.now(),
+            difficulty,
+        });
     };
 
     const resetGame = () => {
