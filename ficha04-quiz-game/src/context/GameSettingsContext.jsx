@@ -17,11 +17,14 @@ export function GameSettingsProvider({ children }) {
     const [playerName, setPlayerName] = useState("");
     const [difficulty, setDifficulty] = useState("easy");
     const [theme, setTheme] = useState("light");
+    const [questionAmount, setQuestionAmount] = useState(5);
 
     const value = useMemo(() => {
         // Este objeto agrupa as preferências globais e as funções que as alteram.
         // Por isso deve conter apenas dados realmente globais e não ações específicas de um componente.
         return {
+            questionAmount,
+            setQuestionAmount,
             playerName,
             setPlayerName,
             difficulty,
@@ -37,7 +40,7 @@ export function GameSettingsProvider({ children }) {
         };
         // O objeto só é recriado quando alguma preferência muda.
         // Isto evita criar uma referência nova em todos os renders e reduz re-renders desnecessários dos consumidores.
-    }, [playerName, difficulty, theme]);
+    }, [playerName, difficulty, questionAmount, theme]);
 
     return (
         <GameSettingsContext.Provider value={value}>

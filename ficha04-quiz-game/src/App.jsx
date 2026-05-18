@@ -37,6 +37,8 @@ function App() {
         setPlayerName,
         difficulty,
         setDifficulty,
+        questionAmount,
+        setQuestionAmount,
         theme,
         toggleTheme,
     } = useGameSettings();
@@ -200,6 +202,7 @@ function App() {
                 // O App coordena quando pedir dados; o serviço sabe como fazer o pedido.
                 const apiQuestions = await fetchTriviaQuestions(
                     gameRequest.difficulty,
+                    gameRequest.amount,
                     controller.signal,
                 );
 
@@ -221,7 +224,7 @@ function App() {
 
                 // Mantemos perguntas locais como fallback interno para a app continuar consistente.
                 // Mesmo quando a API falha, o formato das perguntas continua válido.
-                setQuestions(localQuestions);
+                setQuestions(localQuestions.slice(0, questionAmount));
 
                 // Estado próprio de erro para renderização condicional.
                 // Assim a UI mostra uma recuperação clara em vez de ficar presa no loading.
@@ -252,6 +255,7 @@ function App() {
         setGameRequest({
             id: Date.now(),
             difficulty,
+            amount: questionAmount,
         });
     };
 
@@ -355,6 +359,8 @@ function App() {
                             onPlayerNameChange={setPlayerName}
                             difficulty={difficulty}
                             onDifficultyChange={setDifficulty}
+                            questionAmount={questionAmount}
+                            onQuestionAmountChange={setQuestionAmount}
                             canStartGame={canStartGame}
                             onStartGame={startGame}
                         />

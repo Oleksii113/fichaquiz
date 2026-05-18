@@ -25,6 +25,9 @@ function StartScreen({
     // Callback chamado quando o jogador tenta começar.
     // O filho não muda gameStatus diretamente; pede ao App para decidir.
     onStartGame,
+
+    questionAmount,
+    onQuestionAmountChange,
 }) {
     return (
         <section className="quiz-card">
@@ -59,6 +62,23 @@ function StartScreen({
                     <option value="easy">Fácil</option>
                     <option value="medium">Média</option>
                     <option value="hard">Difícil</option>
+                </select>
+            </label>
+            <label className="form-row">
+                Número de perguntas
+
+                {/*
+                O utilizador pode escolher quantas perguntas quer jogar.
+                O valor continua controlado pelo componente pai através de props.
+                */}
+                <select
+                    value={questionAmount}
+                    onChange={(event) =>
+                        onQuestionAmountChange(Number(event.target.value))
+                    }
+                >
+                    <option value={5}>5 perguntas</option>
+                    <option value={10}>10 perguntas</option>
                 </select>
             </label>
 

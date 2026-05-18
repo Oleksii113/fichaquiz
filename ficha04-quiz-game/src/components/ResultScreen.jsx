@@ -8,6 +8,18 @@
  * @returns {JSX.Element} renderiza o ecrã final do "Quiz Game".
  */
 function ResultScreen({ playerName, stats, onReset }) {
+    // Medalha depende da percentagem final do jogador.
+    // Quanto melhor o desempenho, melhor a medalha apresentada.
+    let medal = "🎯";
+
+    if (stats.percentage >= 90) {
+        medal = "🥇";
+    } else if (stats.percentage >= 70) {
+        medal = "🥈";
+    } else if (stats.percentage >= 50) {
+        medal = "🥉";
+    }
+
     return (
         <section className="quiz-card">
             {/* A frase depende de stats.victory, calculado no App com useMemo.
@@ -19,7 +31,9 @@ function ResultScreen({ playerName, stats, onReset }) {
                 Certas: {stats.correctAnswers} de {stats.totalQuestions}
             </p>
             <p>Percentagem: {stats.percentage}%</p>
-
+            <p className="result-medal">
+                Medalha: {medal}
+            </p>   
             <button type="button" className="button-primary" onClick={onReset}>
                 Voltar ao início
             </button>

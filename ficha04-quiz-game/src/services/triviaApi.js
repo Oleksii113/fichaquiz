@@ -50,16 +50,17 @@ function normalizeQuestion(apiQuestion, index) {
  * Propósito: obter perguntas da Open Trivia DB conforme a dificuldade escolhida pelo jogador.
  * Produz/Devolve: uma lista de perguntas normalizadas pronta para ser usada pela aplicação.
  * @param {string} difficulty - dificuldade usada para filtrar as perguntas pedidas à API.
+ * @param {number} amount - quantidade de perguntas pedidas à API.
  * @param {AbortSignal} signal - sinal usado para cancelar pedidos que deixaram de ser necessários.
  * @returns {Promise<object[]>} devolve um Promise resolvido com perguntas já normalizadas.
  */
-export async function fetchTriviaQuestions(difficulty, signal) {
+export async function fetchTriviaQuestions(difficulty, amount, signal,) {
     // URLSearchParams constrói a query string de forma segura e legível.
     // Evita montar URLs manualmente com concatenações difíceis de rever.
     const params = new URLSearchParams({
         // Mantemos 5 perguntas para a ficha continuar curta.
         // Um número pequeno reduz tempo de espera e facilita testar todos os estados.
-        amount: "5",
+        amount: String(amount),
 
         // type=multiple garante 1 resposta certa + 3 erradas.
         // Isto bate certo com o formato que a app já aprendeu nas perguntas locais.
