@@ -1,5 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { localQuestions } from "./data/localQuestions";
+import QuestionCard from "./components/QuestionCard.jsx";
+import ResultScreen from "./components/ResultScreen.jsx";
+import StartScreen from "./components/StartScreen.jsx";
 
 
 /**
@@ -225,137 +228,42 @@ function App() {
             {/* "quiz-shell" limita a largura para que o conteúdo continue legível em ecrãs grandes. */}
             <div className="quiz-shell">
                 <h1>Quiz Game</h1>
-
-                {gameStatus === "idle" && (
-                    // Renderização condicional: este bloco só aparece no estado "idle".
-                    // Esta técnica mantém vários ecrãs no mesmo componente sem mostrar todos ao mesmo tempo.
-                    <section className="quiz-card">
-                        <h2>Preparar jogo</h2>
-
-                        <label className="form-row">
-                            Nome do jogador
-                            {/*
-                            Num input controlado, o value vem sempre do state.
-                            O utilizador escreve, onChange recebe o novo texto, e setPlayerName sincroniza React com o input.
-                            Assim, a UI nunca depende de um valor escondido apenas dentro do DOM.
-                            */}
-                    
-                            <input
-                                type="text"
-                                value={playerName}
-                                onChange={(event) =>
-                                    setPlayerName(event.target.value)
-                                }
-                                placeholder="Ex.: Ana"
-                            />
-                        </label>
-
-                        <label className="form-row">
-                            Dificuldade
-                            {/*
-                            O select segue a mesma regra do input controlado.
-                            event.target.value contém o value da option escolhida e passa a ser a dificuldade oficial da app.
-                            */}
-                            <select
-                                value={difficulty}
-                                onChange={(event) =>
-                                    setDifficulty(event.target.value)
-                                }
-                            >
-                                <option value="easy">Fácil</option>
-                                <option value="medium">Média</option>
-                                <option value="hard">Difícil</option>
-                            </select>
-                        </label>
-
-                        {!canStartGame && (
-                            // Feedback imediato para explicar porque o botão está bloqueado.
-                            // Sem esta mensagem, o utilizador poderia pensar que o botão não funciona.
-                            <p className="error-text">
-                                Escreve pelo menos 2 caracteres no nome.
-                            </p>
-                        )}
-
-                        <div className="button-row">
-                            {/*
-                              O botão fica bloqueado até o nome ser válido.
-                              Isto dá feedback visual, impede cliques inválidos e reforça a mesma regra usada no handler.
-                            */}
-                            <button
-                                type="button"
-                                className="button-primary"
-                                onClick={startGame}
-                                disabled={!canStartGame}
-                            >
-                                Começar jogo
-                            </button>
-                        </div>
-                    </section>
-                )}
+                <p>Responde a perguntas para testar conhecimentos.</p>
+                {
+                    gameStatus === "idle" && (
+                        <StartScreen
+                            playerName={playerName}
+                            onPlayerNameChange={setPlayerName}
+                            difficulty={difficulty}
+                            onDifficultyChange={setDifficulty}
+                            canStartGame={canStartGame}
+                            onStartGame={startGame}
+                        />
+                    )
+                }
 
                 {
                     gameStatus === "playing" && currentQuestion && (
-                        <section className="quiz-card">
-                            <p>Tempo restante: {timeLeft}s</p>
-                            <p>
-                                Pergunta {currentQuestionIndex + 1} de {totalQuestions}
-                            </p>
-                            <h2>{currentQuestion.question}</h2>
-
-                            <div className="answer-grid">
-                                {
-                                    currentAnswers.map((answer, index) => (
-                                        <button
-                                            key={`${currentQuestion.id}-${index}-${answer}`}
-                                            type="button"
-                                            className="answer-button"
-                                            onClick={() => handleAnswer(answer)}
-                                            disabled={timeLeft === 0}
-                                        >
-                                            {answer}
-                                        </button>
-                                    ))
-                                }
-                            </div>
-                            {
-                                timeLeft === 0 && (
-                                    <div className="button-row">
-                                        <p className="error-text">Tempo esgotado.</p>
-                                        <button
-                                            type="button"
-                                            className="button-secondary"
-                                            onClick={handleTimeout}
-                                        >
-                                            Avançar
-                                        </button>
-                                    </div>
-                                )
-                            }
-                        </section>
+                        <QuestionCard
+                            question={currentQuestion}
+                            answers={currentAnswers}
+                            questionNumber={currentQuestionIndex + 1}
+                            totalQuestions={totalQuestions}
+                            timeLeft={timeLeft}
+                            timeLimit={QUESTION_TIME_LIMIT}
+                            onAnswer={handleAnswer}
+                            onTimeout={handleTimeout}
+                        />
                     )
                 }
 
                 {
                     gameStatus === "finished" && (
-                        <section className="quiz-card">
-                            <h2>
-                                {gameStats.victory ? "Objetivo atingido!" : "Tenta novamente!"}
-                            </h2>
-                            <p>Jogador: {cleanPlayerName}</p>
-                            <p>Pontuação: {gameStats.score}</p>
-                            <p>
-                                Certas: {gameStats.correctAnswers} de {gameStats.totalQuestions}
-                            </p>
-                            <p>Percentagem: {gameStats.percentage}%</p>
-
-                            <button
-                                type="button"
-                                className="button-primary"
-                                onClick={resetGame}
-                            >
-                                Voltar ao início
-                            </button>
-                        </section>
+                        <ResultScreen
+                            playerName={cleanPlayerName}
+                            stats={gameStats}
+                            onReset={resetGame}
+                        />
                     )
                 }
             </div>
