@@ -1,11 +1,11 @@
 /**
- * Propósito: [Completa: explica como este componente resume o desempenho do jogador.]
- * Produz/Devolve: [Completa: descreve pontuação, percentagem, mensagem final e botão de reinício.]
- * @param {object} props - [Completa: descreve os dados finais recebidos do App.]
- * @param {string} props.playerName - [Completa: explica porque mostramos o nome no resultado.]
- * @param {object} props.stats - [Completa: explica que estatísticas este objeto contém.]
- * @param {() => void} props.onReset - [Completa: explica que estado deve ser reposto pelo pai.]
- * @returns {JSX.Element} [Completa: descreve o JSX do ecrã final.]
+ * Propósito: mostrar o resultado final do jogo e resumir o desempenho do jogador.
+ * Produz/Devolve: um ecrã final com pontuação, percentagem de respostas certas e botão para reiniciar o jogo.
+ * @param {object} props - dados finais e callbacks recebidos do App.
+ * @param {string} props.playerName - nome do jogador apresentado no resultado final.
+ * @param {object} props.stats - objeto com estatísticas calculadas do jogo.
+ * @param {() => void} props.onReset - callback chamado para voltar ao início do jogo.
+ * @returns {JSX.Element} renderiza o ecrã final do "Quiz Game".
  */
 function ResultScreen({ playerName, stats, onReset }) {
     return (
